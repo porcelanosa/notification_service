@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\OpenApi\Schemas;
 
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationType;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
@@ -19,14 +21,14 @@ use OpenApi\Attributes as OA;
 final class SendNotificationRequest
 {
     #[OA\Property(
-      example: 'sms',
-      enum   : ['sms', 'email']
+      example: NotificationChannel::Sms->value,
+      enum   : [NotificationChannel::Sms->value, NotificationChannel::Email->value]
     )]
     public string $channel;
 
     #[OA\Property(
-      example: 'bulk',
-      enum   : ['transactional', 'bulk']
+      example: NotificationType::Bulk->value,
+      enum   : [NotificationType::Transactional->value, NotificationType::Bulk->value]
     )]
     public string $type;
 

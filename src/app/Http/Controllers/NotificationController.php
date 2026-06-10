@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationStatus;
+use App\Enums\NotificationType;
 use App\Http\Requests\SendBulkNotificationRequest;
 use App\Jobs\SendNotificationJob;
 use App\Models\Notification;
@@ -59,7 +61,7 @@ class NotificationController extends Controller
             ], 202);
         }
 
-        $queue = $data['type']==='transactional'
+        $queue = $data['type'] === NotificationType::Transactional->value
           ? 'notifications.critical'
           : 'notifications.bulk';
 
@@ -77,7 +79,7 @@ class NotificationController extends Controller
               'type'            => $data['type'],
               'message'         => $data['message'],
               'recipient'       => $recipient['address'],
-              'status'          => 'queued',
+              'status'          => NotificationStatus::Queued->value,
             ]);
 
             // Отправляем в нужную очередь

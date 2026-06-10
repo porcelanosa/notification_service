@@ -1,20 +1,16 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace App\Models;
 
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationStatus;
+use App\Enums\NotificationType;
 use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
-    const string CHANNEL_SMS        = 'sms';
-    const string CHANNEL_EMAIL      = 'email';
-    const string TYPE_TRANSACTIONAL = 'transactional';
-    const string TYPE_BULK          = 'bulk';
-    const string STATUS_QUEUED      = 'queued';
-    const string STATUS_SENT        = 'sent';
-    const string STATUS_DELIVERED   = 'delivered';
-    const string STATUS_DROPPED     = 'dropped';
-
     protected $fillable = [
       'id',
       'idempotency_key',
@@ -27,4 +23,13 @@ class Notification extends Model
       'failure_reason',
       'attempts',
     ];
+
+    protected function casts(): array
+    {
+        return [
+          'channel' => NotificationChannel::class,
+          'type'    => NotificationType::class,
+          'status'  => NotificationStatus::class,
+        ];
+    }
 }

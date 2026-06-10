@@ -6,13 +6,14 @@ namespace App\Channels;
 
 use App\Contracts\ChannelInterface;
 use App\Contracts\GatewayInterface;
+use App\Enums\NotificationChannel;
 use App\Models\Notification;
 
 class EmailChannel implements ChannelInterface
 {
     public function __construct(private GatewayInterface $gateway) {}
 
-    public function getName(): string { return 'email'; }
+    public function getName(): string { return NotificationChannel::Email->value; }
 
     public function send(Notification $notification): void
     {

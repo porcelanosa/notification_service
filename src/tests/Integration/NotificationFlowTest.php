@@ -6,9 +6,13 @@ namespace Tests\Integration;
 
 use App\Channels\EmailChannel;
 use App\Contracts\GatewayInterface;
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationStatus;
+use App\Enums\NotificationType;
 use App\Gateways\MockSmsGateway;
 use App\Jobs\SendNotificationJob;
 use App\Models\Notification;
+use App\Services\Notifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -27,8 +31,8 @@ class NotificationFlowTest extends TestCase
         Queue::fake();
 
         $response = $this->postJson('/api/notifications/send', [
-          'channel'         => 'sms',
-          'type'            => 'bulk',
+          'channel'         => NotificationChannel::Sms->value,
+          'type'            => NotificationType::Bulk->value,
           'message'         => 'Hello from test!',
           'idempotency_key' => 'test-batch-001',
           'recipients'      => [
@@ -43,8 +47,8 @@ class NotificationFlowTest extends TestCase
         $this->assertDatabaseCount('notifications', 2);
         $this->assertDatabaseHas('notifications', [
           'subscriber_id' => 'user-1',
-          'status'        => 'queued',
-          'channel'       => 'sms',
+          'status'        => NotificationStatus::Queued->value,
+          'channel'       => NotificationChannel::Sms->value,
         ]);
 
         Queue::assertPushedOn('notifications.bulk', SendNotificationJob::class);
@@ -59,8 +63,8 @@ class NotificationFlowTest extends TestCase
         Queue::fake();
 
         $this->postJson('/api/notifications/send', [
-          'channel'         => 'sms',
-          'type'            => 'transactional',
+          'channel'         => NotificationChannel::Sms->value,
+          'type'            => NotificationType::Transactional->value,
           'message'         => 'Your OTP: 123456',
           'idempotency_key' => 'otp-batch-001',
           'recipients'      => [
@@ -81,21 +85,21 @@ class NotificationFlowTest extends TestCase
           'id'              => Str::uuid(),
           'idempotency_key' => 'test-item-001',
           'subscriber_id'   => 'user-1',
-          'channel'         => 'sms',
-          'type'            => 'bulk',
+          'channel'         => NotificationChannel::Sms->value,
+          'type'            => NotificationType::Bulk->value,
           'message'         => 'Test message',
           'recipient'       => '+79001234567',
-          'status'          => 'queued',
+          'status'          => NotificationStatus::Queued->value,
         ]);
 
         // Запускаем job синхронно
         (new SendNotificationJob($notification->id))->handle(
-          app(\App\Services\Notifier::class)
+          app(Notifier::class)
         );
 
         $this->assertDatabaseHas('notifications', [
           'id'     => $notification->id,
-          'status' => 'delivered',
+          'status' => NotificationStatus::Delivered->value,
         ]);
     }
 
@@ -108,20 +112,20 @@ class NotificationFlowTest extends TestCase
           'id'              => Str::uuid(),
           'idempotency_key' => 'test-bad-recipient',
           'subscriber_id'   => 'user-bad',
-          'channel'         => 'sms',
-          'type'            => 'bulk',
+          'channel'         => NotificationChannel::Sms->value,
+          'type'            => NotificationType::Bulk->value,
           'message'         => 'Test',
           'recipient'       => '+00000000000', // невалидный (MockSmsGateway)
-          'status'          => 'queued',
+          'status'          => NotificationStatus::Queued->value,
         ]);
 
         (new SendNotificationJob($notification->id))->handle(
-          app(\App\Services\Notifier::class)
+          app(Notifier::class)
         );
 
         $this->assertDatabaseHas('notifications', [
           'id'     => $notification->id,
-          'status' => 'dropped',
+          'status' => NotificationStatus::Dropped->value,
         ]);
     }
 
@@ -134,8 +138,8 @@ class NotificationFlowTest extends TestCase
         Queue::fake();
 
         $payload = [
-          'channel'         => 'email',
-          'type'            => 'bulk',
+          'channel'         => NotificationChannel::Email->value,
+          'type'            => NotificationType::Bulk->value,
           'message'         => 'Welcome!',
           'idempotency_key' => 'dedup-test-001',
           'recipients'      => [
@@ -183,14 +187,14 @@ class NotificationFlowTest extends TestCase
           'id'              => Str::uuid(),
           'idempotency_key' => 'already-done',
           'subscriber_id'   => 'user-1',
-          'channel'         => 'email',
-          'type'            => 'bulk',
+          'channel'         => NotificationChannel::Email->value,
+          'type'            => NotificationType::Bulk->value,
           'message'         => 'Test',
           'recipient'       => 'test@example.com',
-          'status'          => 'delivered', // уже доставлено
+          'status'          => NotificationStatus::Delivered->value
         ]);
 
-        $notifier = new \App\Services\Notifier();
+        $notifier = new Notifier();
         $notifier->addChannel(new EmailChannel($gateway));
 
         new SendNotificationJob($notification->id)->handle($notifier);
@@ -198,7 +202,7 @@ class NotificationFlowTest extends TestCase
         // Статус не изменился
         $this->assertDatabaseHas('notifications', [
           'id'     => $notification->id,
-          'status' => 'delivered',
+          'status' => NotificationStatus::Delivered->value,
         ]);
     }
 }

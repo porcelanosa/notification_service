@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\OpenApi\Schemas;
 
+use App\Enums\NotificationChannel;
+use App\Enums\NotificationType;
+use App\Enums\NotificationStatus;
 use OpenApi\Attributes as OA;
 
 #[OA\Schema(
@@ -20,12 +23,12 @@ final class NotificationSchema
     public string $subscriber_id;
 
     #[OA\Property(
-      enum: ['sms', 'email']
+      enum: [NotificationChannel::Sms->value, NotificationChannel::Email->value]
     )]
     public string $channel;
 
     #[OA\Property(
-      enum: ['transactional', 'bulk']
+      enum: [NotificationType::Transactional->value, NotificationType::Bulk->value]
     )]
     public string $type;
 
@@ -37,10 +40,10 @@ final class NotificationSchema
 
     #[OA\Property(
       enum: [
-        'queued',
-        'processing',
-        'sent',
-        'failed'
+        NotificationStatus::Queued->value,
+        NotificationStatus::Sent->value,
+        NotificationStatus::Delivered->value,
+        NotificationStatus::Dropped->value,
       ]
     )]
     public string $status;

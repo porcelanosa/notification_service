@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App\Jobs;
 
+use App\Enums\NotificationStatus;
 use App\Exceptions\GatewayUnavailableException;
 use App\Exceptions\InvalidRecipientException;
 use App\Models\Notification;
@@ -28,7 +29,11 @@ class SendNotificationJob implements ShouldQueue
         $notification = Notification::findOrFail($this->notificationId);
 
         // Защита от повторной обработки уже доставленного (at-least-once → exactly-once)
-        if (in_array($notification->status, [Notification::STATUS_DELIVERED, Notification::STATUS_DROPPED])){
+        if (in_array(
+          $notification->status,
+          [NotificationStatus::Delivered->value, NotificationStatus::Dropped->value],
+          true,
+        )) {
             Log::info("Notification {$this->notificationId} already processed, skipping.");
 
             return;
@@ -39,22 +44,22 @@ class SendNotificationJob implements ShouldQueue
         try {
             $notifier->send($notification);
 
-            $notification->update(['status' => Notification::STATUS_SENT]);
+            $notification->update(['status' => NotificationStatus::Sent->value]);
 
             // В реальном сервисе статус 'delivered' подтверждается webhook-ом провайдера.
             // В нашем моке — сразу переводим в delivered.
-            $notification->update(['status' => Notification::STATUS_DELIVERED]);
+            $notification->update(['status' => NotificationStatus::Delivered->value]);
         } catch (InvalidRecipientException $e) {
             // Ретраи бессмысленны — получатель невалиден
             $notification->update([
-              'status'         => Notification::STATUS_DROPPED,
+              'status'         => NotificationStatus::Dropped->value,
               'failure_reason' => $e->getMessage(),
             ]);
             $this->fail($e);
         } catch (GatewayUnavailableException $e) {
             // Временный сбой — позволяем Laravel делать retry
             $notification->update([
-              'status'         => Notification::STATUS_QUEUED,
+              'status'         => NotificationStatus::Queued->value,
               'failure_reason' => $e->getMessage(),
             ]);
             throw $e; // пробрасываем для retry-механизма очереди
@@ -64,9 +69,12 @@ class SendNotificationJob implements ShouldQueue
     public function failed(\Throwable $e): void
     {
         Notification::where('id', $this->notificationId)
-                    ->whereNotIn('status', [Notification::STATUS_DELIVERED, Notification::STATUS_DROPPED])
+                    ->whereNotIn(
+                      'status',
+                      [NotificationStatus::Delivered->value, NotificationStatus::Dropped->value],
+                    )
                     ->update([
-                      'status'         => Notification::STATUS_DROPPED,
+                      'status'         => NotificationStatus::Dropped->value,
                       'failure_reason' => "Max retries exceeded: {$e->getMessage()}",
                     ]);
     }
