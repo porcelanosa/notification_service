@@ -11,21 +11,28 @@ use App\Models\Notification;
 class Notifier
 {
     /** @var array<string, ChannelInterface> */
-    private array $channels = [] {
-        get {
-            return $this->channels;
-        }
-    }
+    private array $channels;
+
+    public function __construct() { $this->channels = []; }
 
     public function addChannel(ChannelInterface $channel): void
     {
         $this->channels[$channel->getName()] = $channel;
     }
 
+    public function getChannels(): array
+    {
+        return $this->channels;
+    }
+
     public function send(Notification $notification): void
     {
-        $channel = $this->channels[$notification->channel]
-          ?? throw new ChannelNotFoundException("Channel [{$notification->channel}] not registered");
+        $channelName = $notification->channel instanceof \BackedEnum
+            ? $notification->channel->value
+            : $notification->channel;
+
+        $channel = $this->channels[$channelName]
+          ?? throw new ChannelNotFoundException("Канал [{$channelName}] не зарегистрирова");
 
         $channel->send($notification);
     }

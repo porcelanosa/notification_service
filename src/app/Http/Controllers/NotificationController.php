@@ -83,7 +83,7 @@ class NotificationController extends Controller
             ]);
 
             // Отправляем в нужную очередь
-            SendNotificationJob::dispatch($notification->id)
+            SendNotificationJob::dispatch($notification)
                                ->onQueue($queue);
 
             $created[] = $notification->id;

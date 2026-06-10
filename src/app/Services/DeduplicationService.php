@@ -22,8 +22,8 @@ class DeduplicationService
     {
         $redisKey = "dedup:{$idempotencyKey}";
         // SET NX — атомарно, возвращает 1 если ключ был создан (первый раз)
-        $set = Redis::set($redisKey, 1, ['EX' => $this->ttl, 'NX' => true]);
-
-        return $set===null; // null = ключ уже существовал
+        $redis = Redis::connection()->client();
+        $result = $redis->set($redisKey, 1, 'EX', $this->ttl, 'NX');
+        return $result === null;
     }
 }
