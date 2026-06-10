@@ -26,6 +26,12 @@ docker-compose exec app php artisan test --filter=NotificationFlowTest
 
 ## Swagger UI
 
+Генерация Swagger схемы
+```shell
+docker-compose exec app php artisan l5-swagger:generate
+
+```
+Вход в UI 
 ```
 http://localhost:8080/api/documentation
 ```
