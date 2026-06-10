@@ -1,5 +1,9 @@
 # Notification Service
 
+## Техническое задание
+
+[Полный текст ТЗ](TZ.md)
+
 ## Запуск
 
 ```bash
@@ -23,6 +27,17 @@ docker-compose exec app php artisan migrate
 ```bash
 docker-compose exec app php artisan test --filter=NotificationFlowTest
 ```
+
+## RabbitMQ
+
+```shell
+http://localhost:15672/
+```
+**Логин/пароль:**
+
+rabbitmq_user
+
+qwerty123!wq
 
 ## Swagger UI
 
