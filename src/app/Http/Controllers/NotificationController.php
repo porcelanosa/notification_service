@@ -10,14 +10,42 @@ use App\Models\Notification;
 use App\Services\DeduplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
 
+#[OA\Tag(
+  name: 'Notifications',
+  description: 'Управление уведомлениями'
+)]
 class NotificationController extends Controller
 {
-    public function __construct(private DeduplicationService $dedup) {}
+    public function __construct(private readonly DeduplicationService $dedup) {}
 
-    /**
-     * POST /api/notifications/send
-     */
+    #[OA\Post(
+      path: '/api/notifications/send',
+      operationId: 'sendNotifications',
+      summary: 'Массовая отправка уведомлений',
+      tags: ['Notifications']
+    )]
+    #[OA\RequestBody(
+      required: true,
+      content: new OA\JsonContent(
+        ref: '#/components/schemas/SendNotificationRequest'
+      )
+    )]
+    #[OA\Response(
+      response: 202,
+      description: 'Accepted',
+      content: new OA\JsonContent(
+        ref: '#/components/schemas/AcceptedResponse'
+      )
+    )]
+    #[OA\Response(
+      response: 422,
+      description: 'Validation Error',
+      content: new OA\JsonContent(
+        ref: '#/components/schemas/ValidationErrorResponse'
+      )
+    )]
     public function send(SendBulkNotificationRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -67,9 +95,25 @@ class NotificationController extends Controller
         ], 202);
     }
 
-    /**
-     * GET /api/subscribers/{subscriberId}/notifications
-     */
+    #[OA\Get(
+      path: '/api/subscribers/{subscriberId}/notifications',
+      operationId: 'subscriberNotifications',
+      summary: 'История уведомлений подписчика',
+      tags: ['Notifications']
+    )]
+    #[OA\Parameter(
+      name: 'subscriberId',
+      description: 'ID подписчика',
+      in: 'path',
+      required: true,
+      schema: new OA\Schema(
+        type: 'string'
+      )
+    )]
+    #[OA\Response(
+      response: 200,
+      description: 'Список уведомлений'
+    )]
     public function history(string $subscriberId): JsonResponse
     {
         $notifications = Notification::where('subscriber_id', $subscriberId)
@@ -79,9 +123,36 @@ class NotificationController extends Controller
         return response()->json($notifications);
     }
 
-    /**
-     * GET /api/notifications/{id}
-     */
+    #[OA\Get(
+      path: '/api/notifications/{id}',
+      operationId: 'notificationShow',
+      summary: 'Получить уведомление по ID',
+      tags: ['Notifications']
+    )]
+    #[OA\Parameter(
+      name: 'id',
+      description: 'UUID уведомления',
+      in: 'path',
+      required: true,
+      schema: new OA\Schema(
+        type: 'string',
+        format: 'uuid'
+      )
+    )]
+    #[OA\Response(
+      response: 200,
+      description: 'Notification',
+      content: new OA\JsonContent(
+        ref: '#/components/schemas/Notification'
+      )
+    )]
+    #[OA\Response(
+      response: 404,
+      description: 'Not found',
+      content: new OA\JsonContent(
+        ref: '#/components/schemas/NotFoundResponse'
+      )
+    )]
     public function show(string $id): JsonResponse
     {
         $notification = Notification::findOrFail($id);
