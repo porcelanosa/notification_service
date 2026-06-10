@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Log;
 
 class MockSmsGateway implements GatewayInterface
 {
+    public static bool $simulateFailure = true;
+
     public function deliver(string $recipient, string $message): DeliveryResultInterface
     {
         // Имитируем невалидный номер
@@ -19,7 +21,7 @@ class MockSmsGateway implements GatewayInterface
         }
 
         // Имитируем случайный сбой шлюза (10% вероятность)
-        if (random_int(1, 10) === 1) {
+        if (self::$simulateFailure && random_int(1, 10) === 1) {
             throw new \App\Exceptions\GatewayUnavailableException('SMS gateway timeout');
         }
 

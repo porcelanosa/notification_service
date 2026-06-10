@@ -25,14 +25,14 @@ class Notifier
         return $this->channels;
     }
 
-    public function send(Notification $notification): void
+    public function send($notification): void
     {
         $channelName = $notification->channel instanceof \BackedEnum
             ? $notification->channel->value
             : $notification->channel;
 
         $channel = $this->channels[$channelName]
-          ?? throw new ChannelNotFoundException("Канал [{$channelName}] не зарегистрирова");
+          ?? throw new ChannelNotFoundException("Канал [{$channelName}] не зарегистрирован");
 
         $channel->send($notification);
     }

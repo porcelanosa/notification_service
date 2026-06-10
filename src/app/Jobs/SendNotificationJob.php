@@ -30,12 +30,16 @@ class SendNotificationJob implements ShouldQueue
         $notification = $this->notification;
 
         // Защита от повторной обработки уже доставленного (at-least-once → exactly-once)
+        $statusValue = $notification->status instanceof \BackedEnum
+            ? $notification->status->value
+            : $notification->status;
+
         if (in_array(
-          $notification->status,
-          [NotificationStatus::Delivered->value, NotificationStatus::Dropped->value],
-          true,
+            $statusValue,
+            [NotificationStatus::Delivered->value, NotificationStatus::Dropped->value],
+            true
         )) {
-            Log::info("Сообщение {$this->notificationId} уже обработано.");
+            Log::info("Сообщение {$this->notification->id} уже обработано.");
 
             return;
         }
@@ -68,7 +72,7 @@ class SendNotificationJob implements ShouldQueue
 
     public function failed(\Throwable $e): void
     {
-        Notification::where('id', $this->notificationId)
+        Notification::where('id', $this->notification->id)
                     ->whereNotIn(
                       'status',
                       [NotificationStatus::Delivered->value, NotificationStatus::Dropped->value],

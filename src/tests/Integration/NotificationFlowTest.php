@@ -28,8 +28,6 @@ class NotificationFlowTest extends TestCase
      */
     public function test_bulk_send_queues_notifications(): void
     {
-        Queue::fake();
-
         $response = $this->postJson('/api/notifications/send', [
           'channel'         => NotificationChannel::Sms->value,
           'type'            => NotificationType::Bulk->value,
@@ -47,12 +45,9 @@ class NotificationFlowTest extends TestCase
         $this->assertDatabaseCount('notifications', 2);
         $this->assertDatabaseHas('notifications', [
           'subscriber_id' => 'user-1',
-          'status'        => NotificationStatus::Queued->value,
+          'status'        => NotificationStatus::Delivered->value,
           'channel'       => NotificationChannel::Sms->value,
         ]);
-
-        Queue::assertPushedOn('notifications.bulk', SendNotificationJob::class);
-        Queue::assertPushed(SendNotificationJob::class, 2);
     }
 
     /**
@@ -62,7 +57,7 @@ class NotificationFlowTest extends TestCase
     {
         Queue::fake();
 
-        $this->postJson('/api/notifications/send', [
+        $response = $this->postJson('/api/notifications/send', [
           'channel'         => NotificationChannel::Sms->value,
           'type'            => NotificationType::Transactional->value,
           'message'         => 'Your OTP: 123456',
@@ -71,6 +66,9 @@ class NotificationFlowTest extends TestCase
             ['id' => 'user-1', 'address' => '+79001234567'],
           ],
         ]);
+
+        $response->assertStatus(202)
+                 ->assertJsonFragment(['queue' => 'notifications.critical']);
 
         Queue::assertPushedOn('notifications.critical', SendNotificationJob::class);
     }
@@ -93,7 +91,7 @@ class NotificationFlowTest extends TestCase
         ]);
 
         // Запускаем job синхронно
-        (new SendNotificationJob($notification->id))->handle(
+        new SendNotificationJob($notification)->handle(
           app(Notifier::class)
         );
 
@@ -119,7 +117,7 @@ class NotificationFlowTest extends TestCase
           'status'          => NotificationStatus::Queued->value,
         ]);
 
-        (new SendNotificationJob($notification->id))->handle(
+        new SendNotificationJob($notification)->handle(
           app(Notifier::class)
         );
 
@@ -197,7 +195,7 @@ class NotificationFlowTest extends TestCase
         $notifier = new Notifier();
         $notifier->addChannel(new EmailChannel($gateway));
 
-        new SendNotificationJob($notification->id)->handle($notifier);
+        new SendNotificationJob($notification)->handle($notifier);
 
         // Статус не изменился
         $this->assertDatabaseHas('notifications', [

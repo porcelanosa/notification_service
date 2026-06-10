@@ -16,14 +16,16 @@ class DeduplicationService
     }
 
     /**
-     * Возвращает true если ключ уже видели (дубликат).
+     * Возвращает true если ключ уже существует.
      */
     public function isDuplicate(string $idempotencyKey): bool
     {
         $redisKey = "dedup:{$idempotencyKey}";
         // SET NX — атомарно, возвращает 1 если ключ был создан (первый раз)
-        $redis = Redis::connection()->client();
-        $result = $redis->set($redisKey, 1, 'EX', $this->ttl, 'NX');
-        return $result === null;
+        $connection = app()->environment('testing') ? 'testing' : 'default';
+        $redis      = Redis::connection($connection)->client();
+        $result     = $redis->set($redisKey, 1, 'EX', $this->ttl, 'NX');
+
+        return $result===null;
     }
 }
