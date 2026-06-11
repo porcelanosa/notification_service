@@ -1,0 +1,149 @@
+{
+  "info": {
+    "_postman_id": "258cdb14-8e7e-47d2-8588-167e121f3351",
+    "name": "Notification Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54559557",
+    "_collection_link": "https://go.postman.co/collection/54559557-258cdb14-8e7e-47d2-8588-167e121f3351?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Bulk Notifications",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"channel\": \"sms\",\r\n    \"type\": \"bulk\",\r\n    \"message\": \"Скидка 50% только сегодня!\",\r\n    \"idempotency_key\": \"promo-2026-006\",\r\n    \"recipients\": [\r\n        {\"id\": \"user-1\", \"address\": \"+79001234567\"},\r\n        {\"id\": \"user-2\", \"address\": \"+79007654321\"},\r\n        {\"id\": \"user-3\", \"address\": \"+79003334455\"}\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/notifications/send",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "send"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Invalid Notifications",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"channel\": \"sms\",\r\n    \"type\": \"bulk\",\r\n    \"message\": \"Скидка 50% только сегодня!\",\r\n    \"idempotency_key\": \"promo-2026-006\",\r\n    \"recipients\": [\r\n        {\"id\": \"user-1\", \"address\": \"+79001234567\"},\r\n        {\"id\": \"user-2\", \"address\": \"+79007654321\"},\r\n        {\"id\": \"user-3\", \"address\": \"+79003334455\"}\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/notifications/send",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "send"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Invalid Recipient",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"channel\": \"sms\",\r\n    \"type\": \"bulk\",\r\n    \"message\": \"Скидка 50% только сегодня!\",\r\n    \"idempotency_key\": \"promo-2026-006\",\r\n    \"recipients\": [\r\n        {\"id\": \"user-1\", \"address\": \"+79001234567\"},\r\n        {\"id\": \"user-2\", \"address\": \"+79007654321\"},\r\n        {\"id\": \"user-3\", \"address\": \"+79003334455\"}\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/notifications/send",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "notifications",
+            "send"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Transactional Notification",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "User History",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Notification Status",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    }
+  ]
+}

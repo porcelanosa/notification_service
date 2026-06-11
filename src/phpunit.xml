@@ -41,5 +41,7 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="REDIS_CLIENT" value="predis"/>
         <env name="REDIS_HOST" value="redis"/>
+        <env name="REDIS_TEST_DB" value="2"/>
+        <env name="REDIS_PASSWORD" value="qwerty123!wq"/>
     </php>
 </phpunit>

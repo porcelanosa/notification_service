@@ -9,10 +9,12 @@ use Illuminate\Support\Facades\Redis;
 class DeduplicationService
 {
     private int $ttl;
+    private string $connection;
 
     public function __construct()
     {
-        $this->ttl = (int)config('app.dedup_ttl', 86400);
+        $this->ttl        = (int) config('app.dedup_ttl', 86400);
+        $this->connection = app()->environment('testing') ? 'testing' : 'default';
     }
 
     /**
@@ -21,9 +23,8 @@ class DeduplicationService
     public function isDuplicate(string $idempotencyKey): bool
     {
         $redisKey = "dedup:{$idempotencyKey}";
-        // SET NX — атомарно, возвращает 1 если ключ был создан (первый раз)
-        $connection = app()->environment('testing') ? 'testing' : 'default';
-        $redis      = Redis::connection($connection)->client();
+
+        $redis      = Redis::connection($this->connection)->client();
         $result     = $redis->set($redisKey, 1, 'EX', $this->ttl, 'NX');
 
         return $result===null;

@@ -11,10 +11,6 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        // Force testing environment
-        $this->app['env'] = 'testing';
-        $this->app->instance('env', 'testing');
-
         if (app()->environment('testing')) {
             Redis::connection('testing')->flushdb();
         }
