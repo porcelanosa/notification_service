@@ -15,9 +15,6 @@ class DeduplicationServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Force testing environment for this test
-        $this->app['env'] = 'testing';
-        $this->app->instance('env', 'testing');
         $this->service = new DeduplicationService();
     }
 
@@ -99,7 +96,7 @@ class DeduplicationServiceTest extends TestCase
         $this->service->isDuplicate('key-no-reset'); // повторный вызов
         $ttlAfterSecond = Redis::connection('testing')->ttl($this->getRedisKey('key-no-reset'));
 
-        // TTL уменьшился — повторный вызов не сбросил его
+        // TTL уменьшился
         $this->assertLessThan($ttlAfterFirst, $ttlAfterSecond);
     }
 }

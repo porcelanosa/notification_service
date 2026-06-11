@@ -7,6 +7,8 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationStatus;
 use App\Enums\NotificationType;
 use App\Http\Requests\SendBulkNotificationRequest;
+use App\Http\Resources\NotificationCollection;
+use App\Http\Resources\NotificationResource;
 use App\Jobs\SendNotificationJob;
 use App\Models\Notification;
 use App\Services\DeduplicationService;
@@ -71,6 +73,15 @@ class NotificationController extends Controller
             // Уникальный ключ на уровне одного получателя в рамках batch
             $itemKey = $batchKey . ':' . $recipient['id'];
 
+            // Проверяем дубликат на уровне получателя
+            if ($this->dedup->isDuplicate($itemKey)) {
+                // Уведомление для этого получателя уже существует — считаем batch дубликатом
+                return response()->json([
+                  'message'         => 'Duplicate request detected. Already accepted.',
+                  'idempotency_key' => $batchKey,
+                ], 202);
+            }
+
             $notification = Notification::create([
               'id'              => Str::uuid(),
               'idempotency_key' => $itemKey,
@@ -122,7 +133,7 @@ class NotificationController extends Controller
                                      ->orderByDesc('created_at')
                                      ->paginate(50);
 
-        return response()->json($notifications);
+        return NotificationCollection::make($notifications)->response()->setStatusCode(200);
     }
 
     #[OA\Get(
@@ -159,6 +170,6 @@ class NotificationController extends Controller
     {
         $notification = Notification::findOrFail($id);
 
-        return response()->json($notification);
+        return new NotificationResource($notification)->response()->setStatusCode(200);
     }
 }

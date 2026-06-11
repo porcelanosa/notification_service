@@ -203,4 +203,37 @@ class NotificationFlowTest extends TestCase
           'status' => NotificationStatus::Delivered->value,
         ]);
     }
+
+    /**
+     * Тест 8: Повторный запрос с невалидным получателем возвращает
+     * сообщение о дубликате, а не ошибку уникальности.
+     */
+    public function test_duplicate_invalid_recipient_returns_duplicate_message(): void
+    {
+        $payload = [
+          'channel'         => NotificationChannel::Sms->value,
+          'type'            => NotificationType::Bulk->value,
+          'message'         => 'Тест',
+          'idempotency_key' => 'test-invalid-duplicate-001',
+          'recipients'      => [
+            ['id' => 'user-bad', 'address' => '+00000000000'],
+          ],
+        ];
+
+        // Первый запрос — создаст уведомление со статусом dropped
+        $this->postJson('/api/notifications/send', $payload)->assertStatus(202);
+        $this->assertDatabaseCount('notifications', 1);
+        $this->assertDatabaseHas('notifications', [
+          'subscriber_id' => 'user-bad',
+          'status'        => NotificationStatus::Dropped->value,
+        ]);
+
+        // Второй идентичный запрос — должен вернуть сообщение о дубликате
+        $response = $this->postJson('/api/notifications/send', $payload);
+        $response->assertStatus(202)
+                 ->assertJsonFragment(['message' => 'Duplicate request detected. Already accepted.']);
+
+        // В БД по-прежнему 1 запись
+        $this->assertDatabaseCount('notifications', 1);
+    }
 }
